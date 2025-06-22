@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chatty chat chat</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<button id="toggle-api-keys" >API Keys</button>
+	<div id="api-keys" class="hidden">
+		<form id="api-keys-form">
+			<label for="openai-api-key">OpenAI API Key</label>
+			<input type="password" name="openai-api-key" id="openai-api-key">
+			<label for="brave-search-api-proxy-url">Brave Search API Proxy URL</label>
+			<input type="text" name="brave-search-api-proxy-url" id="brave-search-api-proxy-url" value="https://ff6347-brave-search-proxy.val.run/">
+			<label for="brave-api-key">Brave API Key</label>
+			<input type="password" name="brave-api-key" id="brave-api-key">
+
+			<div class="button-group">
+				<button type="submit" id="save-api-key">save</button>
+				<!-- <label for="close-api-keys-form">close</label> -->
+				<button type="button" id="close-api-keys-form">close</button>
+			</div>
+			<div id="description">
+				<p>
+					These are the API keys for the Brave Search API Proxy and the OpenAI API. <br>
+					To use the Brave Search API we need a proxy on val.town to pass your requests through. <br> Remix mine <a href="https://www.val.town/x/ff6347/brave-search-proxy/code/brave_search_proxy.http.ts" target="_blank">here</a>. You still need to pass your own API key to the proxy.
+
+				</p>
+				<p>Same thing for OpenAI API. Sorry no free APIs here.</p>
+			</div>
+		</form>
+	</div>
+	<main>
+		<div class="chat-history">
+		</div>
+		<form id="chat-form">
+			<input type="text" name="content">
+			<button type="submit">send</button>
+		</form>
+	</main>
+	<script src="vendor/purify.min.js"></script>
+	<script src="index.js" type="module"></script>
+	<script src="toogle-apikeys-form.js" type="module"></script>
+</body>
+</html>
