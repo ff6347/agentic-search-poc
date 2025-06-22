@@ -1,8 +1,11 @@
 # Agentic Search Proof of Concept
 
 This is a web-based chat interface that allows you to interact with an AI agent that can perform web searches.
+
 It's a "Bring-Your-Own-Key" application, meaning you provide your own API keys for OpenAI and the Brave Search API. The interface is built with vanilla HTML, CSS, and JavaScript.
+
 The core functionality is an "agentic loop" where the AI can decide to use the do_search tool to look up information. It's designed to handle multi-step conversations, where it can use tools multiple times before giving a final answer. The UI includes a loading indicator while the agent is working, a "Stop" button to interrupt it manually, and a circuit breaker to prevent infinite loops.
+
 The agent is a simple tool-using agent that can use the do_search tool to look up information. It's designed to handle multi-step conversations, where it can use tools multiple times before giving a final answer.
 
 ## How to use
