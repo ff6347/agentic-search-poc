@@ -88,6 +88,7 @@ const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
 let isAgentRunning = false;
 let shouldStopLoop = false;
+let abortController;
 
 document.addEventListener('DOMContentLoaded', () => {
 	// If the user was already and added a key to the local storage, use it
@@ -146,6 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		// If the agent is running the submit button works as a stop button
 		if (isAgentRunning) {
 			shouldStopLoop = true;
+			if (abortController) {
+				abortController.abort();
+			}
 			sendButton.textContent = 'Stopping...';
 			sendButton.disabled = true;
 			return;
@@ -166,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		const content = String(contentValue);
 
 		// --- Start Agent Run ---
-
+		isAgentRunning = true;
+		shouldStopLoop = false;
+		abortController = new AbortController();
 		sendButton.textContent = 'Stop';
 
 		const userMessage = { role: 'user', content };
@@ -196,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					llmOptions,
 					openaiApiKey,
 					apiEndpoint,
+					abortController.signal,
 				);
 				console.log(json);
 
@@ -249,14 +256,24 @@ document.addEventListener('DOMContentLoaded', () => {
 				createMessageElement({ role: 'assistant', content: finalContent }),
 			);
 		} catch (error) {
-			console.error(error);
 			clearInterval(loadingInterval);
-			loadingEl.replaceWith(
-				createMessageElement({
-					role: 'assistant',
-					content: `An error occurred: ${error.message}`,
-				}),
-			);
+			if (error.name === 'AbortError') {
+				console.log('Fetch aborted by user.');
+				loadingEl.replaceWith(
+					createMessageElement({
+						role: 'assistant',
+						content: 'Processing stopped manually.',
+					}),
+				);
+			} else {
+				console.error(error);
+				loadingEl.replaceWith(
+					createMessageElement({
+						role: 'assistant',
+						content: `An error occurred: ${error.message}`,
+					}),
+				);
+			}
 		} finally {
 			// Truncate history here
 			const allButSystem = llmOptions.messages.slice(1);
@@ -296,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 });
 
-async function getOpenAICompletion(messages, apiKey, endpoint) {
+async function getOpenAICompletion(messages, apiKey, endpoint, signal) {
 	const response = await fetch(endpoint, {
 		method: 'POST',
 		headers: {
@@ -304,6 +321,7 @@ async function getOpenAICompletion(messages, apiKey, endpoint) {
 			Authorization: `Bearer ${apiKey}`,
 		},
 		body: JSON.stringify(messages),
+		signal,
 	});
 
 	if (!response.ok) {
