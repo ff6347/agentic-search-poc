@@ -1,4 +1,4 @@
-import { LOCAL_STORAGE_KEYS } from '../constants.js';
+import { LOCAL_STORAGE_KEYS } from '../lib/constants.js';
 
 const BRAVE_SEARCH_API_URL = 'https://ff6347-brave-search-proxy.val.run';
 // Example curl request
@@ -10,7 +10,7 @@ curl -s --compressed "https://api.search.brave.com/res/v1/web/search?q=brave+sea
   -H "X-Subscription-Token: <YOUR_API_KEY>"
 
  */
-export const doSearch = async (query) => {
+export async function doSearch(query) {
 	const braveSearchApiProxyUrl = localStorage.getItem(
 		LOCAL_STORAGE_KEYS.BRAVE_SEARCH_API_PROXY_URL,
 	);
@@ -37,4 +37,4 @@ export const doSearch = async (query) => {
 	}
 	const data = await response.json();
 	return data;
-};
+}
