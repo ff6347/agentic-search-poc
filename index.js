@@ -175,11 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		abortController = new AbortController();
 		sendButton.textContent = 'Stop';
 
+		// Add the users message to the history
+		// remove it from the input field
+		// and add it to the chat thread element
 		const userMessage = { role: 'user', content };
 		llmOptions.messages.push(userMessage);
 		appendMessage(userMessage, chatHistoryElement);
 		inputElement.value = '';
 
+		// Add a loading element to the chat thread
+		// this is for the loading animation
 		const loadingEl = document.createElement('div');
 		loadingEl.className = 'message assistant';
 		chatHistoryElement.appendChild(loadingEl);
@@ -189,14 +194,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			loadingEl.innerHTML = dots.frames[loadingIndex];
 		}, dots.interval);
 
+		// scroll to the bottom of the chat thread
 		scrollToBottom(chatHistoryElement);
 
 		try {
 			// Okay here we go. This is the main loop.
-			// The agent will keep running until he found an answer to it.
+			// The agent will keep running until he found an answer to it, or the user stops it, or the agent reaches the maximum number of loops.
 
 			let loopCount = 0;
-			while (loopCount < MAX_LOOPS && !shouldStopLoop) {
+			// Named loops statements.
+			// Not needed here but it's a good reminder what a break and continue is targeting.
+			MainLoop: while (loopCount < MAX_LOOPS && !shouldStopLoop) {
 				loopCount++;
 				const json = await getOpenAICompletion(
 					llmOptions,
@@ -204,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					apiEndpoint,
 					abortController.signal,
 				);
-				console.log(json);
+				console.info(json);
 
 				const { message: assistantMessage, finish_reason } = json.choices[0];
 
@@ -213,8 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				if (finish_reason === 'stop') {
 					// End of conversation
-					break;
+					break MainLoop;
 				} else if (finish_reason === 'tool_calls') {
+					// now whe have a tool call here issued by the llm
+					// we accumulate them all in a array of promises
+					// and work on them
+					// when they are all done we have the results
 					const toolResults = await Promise.all(
 						assistantMessage.tool_calls.map(async (toolCall) => {
 							const toolName = toolCall.function.name;
@@ -230,15 +242,22 @@ document.addEventListener('DOMContentLoaded', () => {
 							}
 						}),
 					);
+					// add all the tool results to the messages array
+					// this is for the next iteration of the loop
 					llmOptions.messages.push(...toolResults);
 					// Continue loop to send tool results to the model
 				} else {
 					// Handle other cases or break
 					console.warn(`Unexpected finish_reason: ${finish_reason}`);
-					break;
+					break MainLoop;
 				}
 			}
 
+			// now we have the final content
+			// we need to check if the last message is an assistant message
+			// and if it has content
+			// if it does, we use that as the final content
+			// if it doesn't, we use a default message
 			let finalContent = 'Sorry, I could not find an answer.';
 			const lastMessage = llmOptions.messages[llmOptions.messages.length - 1];
 			if (lastMessage.role === 'assistant' && lastMessage.content) {
@@ -257,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			);
 		} catch (error) {
 			clearInterval(loadingInterval);
+
 			if (error.name === 'AbortError') {
 				console.log('Fetch aborted by user.');
 				loadingEl.replaceWith(
