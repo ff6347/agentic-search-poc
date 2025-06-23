@@ -5,7 +5,7 @@ import {
 	MAX_HISTORY_LENGTH,
 	MAX_LOOPS,
 	dots,
-} from './constants.js';
+} from './lib/constants.js';
 
 // Example curl request with tool calls
 // curl "https://api.openai.com/v1/chat/completions" \
