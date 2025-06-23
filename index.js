@@ -7,7 +7,7 @@ import {
 	dots,
 } from './constants.js';
 
-// Example curl request
+// Example curl request with tool calls
 // curl "https://api.openai.com/v1/chat/completions" \
 //     -H "Content-Type: application/json" \
 //     -H "Authorization: Bearer $OPENAI_API_KEY" \
@@ -38,7 +38,7 @@ import {
 //         ]
 //     }'
 
-let messageHistory = {
+let llmOptions = {
 	// messages: [{role: user | assistant | system; content: string}]
 	// response_format: { type: 'json_object' },
 
@@ -84,20 +84,17 @@ What would you like to search for?`,
 	],
 };
 
-// TODO: use your own val.town endpoint
-// remix: https://val.town/remix/ff6347-openai-api
-// const apiEndpoint = 'https://ff6347-openai-api.val.run/';
 const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
 let isAgentRunning = false;
 let shouldStopLoop = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+	// If the user was already and added a key to the local storage, use it
 	const openaiApiKey = localStorage.getItem(LOCAL_STORAGE_KEYS.OPENAI_API_KEY);
-	const openaiApiUrl = localStorage.getItem('exp-agent-search-openai-api-url');
-	const braveApiKey = localStorage.getItem(LOCAL_STORAGE_KEYS.BRAVE_API_KEY);
 
-	// get the history element
+	// get the relevant elements from the DOM
+	// chat history, input, send, toggle api form
 	const chatHistoryElement = document.querySelector('.chat-history');
 	const inputElement = document.querySelector(
 		'form#chat-form input[name="content"]',
@@ -106,7 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const sendButton = document.querySelector('form#chat-form button');
 	const toggleApiKeysButton = document.getElementById('toggle-api-keys');
 	const apiKeysFormContainer = document.getElementById('api-keys');
+
 	// check if the elements exists in the DOM
+	// if not, throw an error
 	if (!chatHistoryElement || !(chatHistoryElement instanceof HTMLElement)) {
 		throw new Error('Could not find element .chat-history');
 	}
@@ -127,42 +126,51 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Initial message rendering for existing history (if any)
-	messageHistory.messages.forEach((message) =>
+	llmOptions.messages.forEach((message) =>
 		appendMessage(message, chatHistoryElement),
 	);
 
-	let loadingIndex = 0;
+	let loadingIndex = 0; // this is for the loading animation
 	const originalButtonText = sendButton.innerHTML;
+
+	// now when the user submits the form, we want to run the agent
 	formElement.addEventListener('submit', async (event) => {
 		event.preventDefault(); // dont reload the page
 
-		// Close API keys form if it's open
+		// Close API keys form if it's open on submit
 		if (!apiKeysFormContainer.classList.contains('hidden')) {
 			apiKeysFormContainer.classList.add('hidden');
 			toggleApiKeysButton.classList.remove('hidden');
 		}
 
+		// If the agent is running the submit button works as a stop button
 		if (isAgentRunning) {
 			shouldStopLoop = true;
 			sendButton.textContent = 'Stopping...';
 			sendButton.disabled = true;
 			return;
+		} else {
+			isAgentRunning = true;
 		}
 
+		// get the data from the form
+		// it is just the input field for now
 		const formData = new FormData(formElement);
 		const contentValue = formData.get('content');
 		if (!contentValue) {
-			return; // Changed from throw to return for graceful exit
+			// if there is nothing in the input end here
+			return;
 		}
+
+		// convert the value to a string
 		const content = String(contentValue);
 
 		// --- Start Agent Run ---
-		isAgentRunning = true;
-		shouldStopLoop = false;
+
 		sendButton.textContent = 'Stop';
 
 		const userMessage = { role: 'user', content };
-		messageHistory.messages.push(userMessage);
+		llmOptions.messages.push(userMessage);
 		appendMessage(userMessage, chatHistoryElement);
 		inputElement.value = '';
 
@@ -185,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			while (loopCount < MAX_LOOPS && !shouldStopLoop) {
 				loopCount++;
 				const json = await getOpenAICompletion(
-					messageHistory,
+					llmOptions,
 					openaiApiKey,
 					apiEndpoint,
 				);
@@ -194,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const { message: assistantMessage, finish_reason } = json.choices[0];
 
 				// Add the assistant's response to history
-				messageHistory.messages.push(assistantMessage);
+				llmOptions.messages.push(assistantMessage);
 
 				if (finish_reason === 'stop') {
 					// End of conversation
@@ -215,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 							}
 						}),
 					);
-					messageHistory.messages.push(...toolResults);
+					llmOptions.messages.push(...toolResults);
 					// Continue loop to send tool results to the model
 				} else {
 					// Handle other cases or break
@@ -225,8 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			let finalContent = 'Sorry, I could not find an answer.';
-			const lastMessage =
-				messageHistory.messages[messageHistory.messages.length - 1];
+			const lastMessage = llmOptions.messages[llmOptions.messages.length - 1];
 			if (lastMessage.role === 'assistant' && lastMessage.content) {
 				finalContent = lastMessage.content;
 			}
@@ -252,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			);
 		} finally {
 			// Truncate history here
-			const allButSystem = messageHistory.messages.slice(1);
+			const allButSystem = llmOptions.messages.slice(1);
 
 			if (allButSystem.length > MAX_HISTORY_LENGTH) {
 				let finalMessages = allButSystem.slice(-MAX_HISTORY_LENGTH);
@@ -277,8 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					finalMessages = [];
 				}
 
-				const systemMessage = messageHistory.messages[0];
-				messageHistory.messages = [systemMessage, ...finalMessages];
+				const systemMessage = llmOptions.messages[0];
+				llmOptions.messages = [systemMessage, ...finalMessages];
 			}
 
 			isAgentRunning = false;
