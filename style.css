@@ -1,3 +1,24 @@
+:root {
+	--color-base-h: 351;
+	--color-base-s: 100%;
+	--color-base-l: 86%; /* lightpink */
+
+	--color-primary: hsl(
+		var(--color-base-h),
+		var(--color-base-s),
+		var(--color-base-l)
+	);
+	--color-user: hsl(
+		var(--color-base-h),
+		var(--color-base-s),
+		calc(var(--color-base-l) - 10%)
+	);
+	--color-assistant: hsl(
+		var(--color-base-h),
+		var(--color-base-s),
+		calc(var(--color-base-l) + 10%)
+	);
+}
 * {
 	box-sizing: border-box;
 	padding: 0;
@@ -11,35 +32,44 @@ body {
 	line-height: 1.5;
 }
 main {
-	width: 700px;
+	max-width: 700px;
 	height: 100%;
 	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
-	padding: 8px;
+	gap: 2rlh;
+	padding: 0.5rlh;
+	padding-top: 2rlh;
 }
 .chat-history {
 	width: 100%;
 	height: 100px;
-	background-color: lightpink;
+	background-color: var(--color-primary);
 	flex-grow: 1;
 	display: flex;
 	align-items: flex-end;
 	flex-direction: column;
-	gap: 16px;
+	gap: 2rlh;
 	overflow-y: auto;
-	padding: 16px;
+	padding: 0.5rlh;
+}
+.chat-history > .message {
+	padding: 0.5rlh;
+	max-width: 95%;
 }
 .chat-history > .message.assistant {
+	border-radius: 0.25rlh 0.25rlh 0.25rlh 0rlh;
 	align-self: flex-start;
+	background-color: var(--color-assistant);
 }
 .chat-history > .message.user {
+	border-radius: 0.25rlh 0.25rlh 0rlh 0.25rlh;
 	align-self: flex-end;
+	background-color: var(--color-user);
 }
 .chat-history > .message.assistant ul {
 	list-style-type: disc;
-	padding-left: 16px;
+	padding-left: 0.5rlh;
 }
 
 .chat-history a {
@@ -62,7 +92,8 @@ form#chat-form {
 
 input[type='text'] {
 	flex-grow: 1;
-	height: 32px;
+	height: 1.5rlh;
+	/* border-radius: 0.1rlh; */
 }
 button {
 	height: 100%;
@@ -77,7 +108,7 @@ button {
 	color: #fff;
 	border: none;
 
-	padding: 8px 16px;
+	/* padding: 0.5rlh 0.5rlh; */
 	min-width: 100px;
 }
 button:hover {
@@ -90,6 +121,7 @@ button:hover {
 	right: 0;
 	width: 300px;
 	background-color: #fff;
+	/* box-shadow: -1px 1px 2px 0 hsla(0, 0%, 0%, 0.5); */
 }
 
 form#api-keys-form {
@@ -97,22 +129,22 @@ form#api-keys-form {
 	/* background-color: #000; */
 	color: #000;
 	border: none;
-	padding: 16px;
+	padding: 0.5rlh;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 0.5rlh;
 }
 
 #api-keys-form label {
 	background-color: #fff;
 	color: #000;
-	padding: 8px 16px;
+	padding: 0.5rlh 1rlh;
 }
 
 #api-keys-form input {
 	background-color: #fff;
 	color: #000;
-	padding: 8px 16px;
+	padding: 0.5rlh 1rlh;
 	font-size: 14px;
 }
 
@@ -137,10 +169,13 @@ form#api-keys-form button {
 	background-color: #000;
 	color: #fff;
 	border: none;
-	padding: 8px 16px;
+	padding: 0.5rlh 0.5rlh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	cursor: pointer;
-	height: 32px;
-	width: 32px;
+	height: 1.5rlh;
+	width: 1.5rlh;
 }
 
 #toggle-api-keys:hover {
