@@ -22,6 +22,7 @@ The folder /proxy contains the code for the proxy that allows you to use the Bra
 
 ## Links
 
+- [How to Build an Agent](https://ampcode.com/how-to-build-an-agent)
 - [CLI Spinners](https://github.com/sindresorhus/cli-spinners)
 - [DOMPurify](https://github.com/cure53/DOMPurify)
 - [Live Server](https://marketplace.cursorapi.com/items?itemName=ritwickdey.LiveServer)
