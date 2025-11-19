@@ -91,9 +91,6 @@ let shouldStopLoop = false;
 let abortController;
 
 document.addEventListener('DOMContentLoaded', () => {
-	// If the user was already and added a key to the local storage, use it
-	const openaiApiKey = localStorage.getItem(LOCAL_STORAGE_KEYS.OPENAI_API_KEY);
-
 	// get the relevant elements from the DOM
 	// chat history, input, send, toggle api form
 	const chatHistoryElement = document.querySelector('.chat-history');
@@ -198,6 +195,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		scrollToBottom(chatHistoryElement);
 
 		try {
+			// Get the API key from localStorage right before making the call
+			const openaiApiKey = localStorage.getItem(LOCAL_STORAGE_KEYS.OPENAI_API_KEY);
+
+			// Validate that the API key exists
+			if (!openaiApiKey || openaiApiKey.trim() === '') {
+				throw new Error('OpenAI API key is not set. Please click the "API Keys" button to configure your API keys.');
+			}
+
 			// Okay here we go. This is the main loop.
 			// The agent will keep running until he found an answer to it, or the user stops it, or the agent reaches the maximum number of loops.
 
